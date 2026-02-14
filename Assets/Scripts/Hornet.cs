@@ -29,6 +29,7 @@ public class PlayerState
 		vertical is VerticalState.groundJump or VerticalState.airJump;
 	public bool isWallSliding = false;
 }
+
 public class HasAbility
 {
 	public bool wallSlide = false;
@@ -49,6 +50,8 @@ public partial class Hornet : CharacterBody2D
 	int airJumpCharge;
 	float jumpDuration = 0;
 	
+	string debugInfo = "";
+	int frameCount = 0;
 
 	//Run Once
 	public override void _Ready()
@@ -63,28 +66,30 @@ public partial class Hornet : CharacterBody2D
 	{
 		Vector2 velocity = Velocity;
 		HandleGravity(delta, ref velocity);
-
-		if(state.isWallSliding)
-			HandleWallJump(delta, ref velocity);
-		else
-			HandleJump(delta, ref velocity);
-
-		if(hasAbility.wallSlide)
-			HandleSliding(ref velocity);
-
-		HandleMovement(ref velocity);
 		
+		HandleMovement(ref velocity);
+		HandleWallSlide(ref velocity);
+		HandleJump(delta, ref velocity);
+		HandleWallJump(delta, ref velocity);
+
 		Velocity = velocity;
-		ShowDebug();
 		MoveAndSlide();
 		UpdateState();
+		ShowDebug();
+		frameCount++;
 	}
 
 
 	void ShowDebug()
 	{
-		GD.Print("🚶‍♂️‍➡️:", permissions.canWalkRun,"  ",(state.isWallSliding?"sliding  ":"notSliding  "), Velocity, "  ⌚:", jumpDuration,
-			"\n", state.horizontal, "  ", state.vertical, "  ", state.ability, "  🔋:", airJumpCharge);
+		string newdebugInfo =
+		$"🚶‍♂️‍➡️: {permissions.canWalkRun}  {(state.isWallSliding ? "sliding" : "notSliding")}  {Velocity}  ⌚: {jumpDuration}\n" +
+		$"     {state.horizontal}  {state.vertical}  🔋: {airJumpCharge}";
+
+		if(newdebugInfo != debugInfo)
+			GD.Print(frameCount, ": ",newdebugInfo);
+
+		debugInfo = newdebugInfo;
 	}
 	void HandleGravity(double delta, ref Vector2 velocity)
 	{
@@ -100,12 +105,10 @@ public partial class Hornet : CharacterBody2D
 	}
 	void HandleMovement(ref Vector2 velocity)
 	{
-		if(!permissions.canWalkRun)
-		{
-			// velocity.X = 0;
-			state.horizontal = HorizontalState.none;
-			return;
-		}
+		// if(state.isWallSliding)
+		// 	return;
+
+
 
 		bool running = Input.IsActionPressed("dash");
 
@@ -126,21 +129,17 @@ public partial class Hornet : CharacterBody2D
 	}
 	void HandleJump(double delta, ref Vector2 velocity)
 	{
-		if(IsOnFloor() && !IsOnCeiling())
-		{
-			airJumpCharge = maxAirJumpCharge;
-			jumpDuration = 0;
-		}
+		if(state.isWallSliding)
+			return;
 
+
+		
 		if (Input.IsActionJustPressed("jump"))
 		{
 			if(IsOnFloor())
 			{
-				// if(!IsOnCeiling())
-				// {
-					velocity.Y = JumpVelocity;
-					state.vertical = VerticalState.groundJump;
-				//}
+				velocity.Y = JumpVelocity;
+				state.vertical = VerticalState.groundJump;
 			}
 			else
 			{
@@ -168,36 +167,51 @@ public partial class Hornet : CharacterBody2D
 			jumpDuration = 0;
 		}
 	}
-	void HandleSliding(ref Vector2 velocity)
+	void HandleWallSlide(ref Vector2 velocity)
 	{
-		if (state.vertical == VerticalState.wallJump) return;
+		if (!(
+			hasAbility.wallSlide &&
+			state.vertical != VerticalState.wallJump))
+			return;
 		
 		if(IsOnWall() && !IsOnFloor())
 		{
 			state.isWallSliding = true;
-			permissions.canWalkRun = false;
-		}
-		else
-		{
-			state.isWallSliding = false;
-			permissions.canWalkRun = true;
 		}
 	}
 	void HandleWallJump(double delta, ref Vector2 velocity)
 	{
+		if(!(
+			state.isWallSliding))
+			return;
+
+
 		if(Input.IsActionJustPressed("jump"))
 		{
 			Vector2 jumpDir = (GetWallNormal() + Vector2.Up).Normalized();
 
 			state.vertical = VerticalState.wallJump;
-			velocity = jumpDir*300;
-
-			permissions.canWalkRun = true;
+			velocity = jumpDir*10000;
 		}
 	}
 
 	void UpdateState()
 	{
+		if(state.isWallSliding)
+		{
+			if(!IsOnWall() || IsOnFloor())
+			{
+				state.isWallSliding = false;
+			}
+		}
+
+		if(IsOnFloor() && !IsOnCeiling())
+		{
+			airJumpCharge = maxAirJumpCharge;
+			jumpDuration = 0;
+		}
+
+
 		if(IsOnFloor()) state.vertical = VerticalState.none;
 		else if(Velocity.Y >= 0) state.vertical = VerticalState.fall;
 	}
