@@ -184,7 +184,7 @@ public partial class Hornet : CharacterBody2D
 				}
 			}
 		}
-		else
+		else if(Input.IsActionJustReleased("jump"))
 		{
 			jumpDuration = 0;
 		}
@@ -229,7 +229,7 @@ public partial class Hornet : CharacterBody2D
 				}
 			}
 		}
-		else
+		else if(Input.IsActionJustReleased("jump"))
 		{
 			wallJumpDuration = 0;
 			wallJumpBackDur = maxWallJumpBackDur;
