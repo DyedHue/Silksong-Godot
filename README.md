@@ -1,4 +1,4 @@
-# How do use
+# How to use
 Clone this repository to be able to access everything within it and make any modifications to your liking in Godot  
   
 If you just want to download and play the game:
