@@ -31,7 +31,6 @@ public partial class AnimationController : Node2D
 			else if(hornet.state.vertical == VerticalState.groundJump) anim = "Jump";
 			else if(hornet.state.vertical == VerticalState.airJump) anim = "MidAirJump";
 		}
-
 		sprite.Play(anim);
 	}
 }

@@ -55,7 +55,7 @@ dash={
 [physics]
 
 3d/physics_engine="Jolt Physics"
-2d/default_gravity=3800.0
+2d/default_gravity=2300.0
 
 [rendering]
 
