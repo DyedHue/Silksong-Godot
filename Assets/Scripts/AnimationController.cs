@@ -27,10 +27,13 @@ public partial class AnimationController : Node2D
 		}
 		else
 		{
-			if     (hornet.state.vertical == VerticalState.fall) anim = "Fall";
+			if(hornet.state.vertical == VerticalState.fall) anim = "Fall";
 			else if(hornet.state.vertical == VerticalState.groundJump) anim = "Jump";
 			else if(hornet.state.vertical == VerticalState.airJump) anim = "MidAirJump";
+			else if(hornet.state.vertical == VerticalState.wallJump) anim = "WallJump";
 		}
+		if(hornet.state.isWallSliding) anim = "WallSlide";
+
 		sprite.Play(anim);
 	}
 }
